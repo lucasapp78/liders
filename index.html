@@ -1,0 +1,480 @@
+
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L.A Cashback VIP 👑</title>
+<style>
+body {
+    background: linear-gradient(180deg, #0d0d0d, #1a1a1a);
+    color: #f1f1f1;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    padding: 20px;
+}
+h2 {
+    color: #ff7f00;
+    text-align: center;
+    margin-bottom: 20px;
+}
+label { color: #f1f1f1; margin-top: 5px; display: block; }
+input, select {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: #121212;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 8px;
+}
+button {
+    width: 100%;
+    margin-bottom: 10px;
+    background-color: #ff7f00;
+    border: none;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #e56700;
+}
+.jogo-card {
+    background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)),
+                url('https://i.imgur.com/ww9zFej.png');
+    background-size: cover;
+    background-position: center;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+.jogo-header {
+    background-color: #ff7f00;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+}
+.jogo-info {
+    text-align: center;
+    margin: 8px 0;
+    color: #ccc;
+}
+.jogo-times {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 12px;
+}
+.jogo-times img {
+    width: 50px;
+    height: 50px;
+}
+.jogo-times strong {
+    font-size: 1.1rem;
+}
+.mercado-principal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.mercado-principal label {
+    flex: 1 1 calc(33.333% - 20px);
+    max-width: calc(33.333% - 20px);
+    text-align: center;
+    background: #2c2c2c;
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid #444;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+    .mercado-principal label {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+}
+.mercado-principal label:hover {
+    background: #ff7f00;
+    color: #121212;
+}
+.mais-odds {
+    background: #181818;
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid #333;
+}
+.btn-mais-odds {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+}
+.btn-mais-odds:hover {
+    background-color: #444;
+}
+</style>
+</head>
+<body>
+
+<audio id="bgMusic" loop>
+  <source src="musica.mp3" type="audio/mpeg">
+  Seu navegador não suporta áudio.
+</audio>
+
+<button onclick="document.getElementById('bgMusic').play()" style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #ff7f00;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  z-index: 999;
+">🔊</button>
+
+
+<h2>L.A Cashback VIP 👑</h2>
+
+<label>Campeonato:</label>
+<select id="liga">
+<option value="71">Brasileirão Série A</option>
+<option value="72">Série B</option>
+<option value="73">Copa do Brasil</option>
+<option value="9">Libertadores</option>
+<option value="39">Premier League</option>
+<option value="140">La Liga</option>
+<option value="2">Champions League</option>
+</select>
+
+<label>Filtrar por Time:</label>
+<input type="text" id="filtroTime" placeholder="Ex: Flamengo, Chelsea, Real Madrid">
+
+<button onclick="carregarOddsReais()">🔄 Carregar Jogos do Dia</button>
+
+<label>Tipo de aposta (acertos):</label>
+<select id="tipoDesdobramento">
+<option value="1">Acertar 1</option>
+<option value="2">Acertar 2</option>
+<option value="3">Acertar 3</option>
+<option value="4">Acertar 4</option>
+<option value="5">Acertar 5</option>
+<option value="6">Acertar 6</option>
+<option value="7">Acertar 7</option>
+<option value="8">Acertar 8</option>
+<option value="9">Acertar 9</option>
+<option value="10">Acertar 10</option>
+</select>
+
+<input type="number" id="stake" placeholder="Valor por combinação (R$)" step="0.01" value="10">
+
+<button onclick="gerarDesdobramento()">⚙️ Gerar Bilhetes</button>
+<button onclick="exportarPDF()">📄 Exportar PDF</button>
+<button onclick="compartilharWhatsApp()">📤 Compartilhar no WhatsApp</button>
+
+<div id="resultado"></div>
+<div id="inputs"></div>
+
+<script>
+const API_KEY = "69b92fb729838ba69139a6d92c457f83";
+
+function traduzirValorOdd(valor) {
+    if (typeof valor !== 'string') valor = String(valor);
+    return valor
+        .replace(/\bHome\b/g, 'Casa')
+        .replace(/\bAway\b/g, 'Fora')
+        .replace(/\bDraw\b/g, 'Empate')
+        .replace(/\bYes\b/g, 'Sim')
+        .replace(/\bNo\b/g, 'Não')
+        .replace(/\bOver\b/g, 'Acima')
+        .replace(/\bUnder\b/g, 'Abaixo');
+}
+
+function traduzirMercado(nomeOriginal) {
+    const traducoes = {
+        "Match Winner": "Resultado Final",
+        "Second Half Winner": "Resultado 2º Tempo",
+        "Asian Handicap": "Handicap Asiático",
+        "Home/Away": "Casa/Fora",
+        "Over/Under 1.5 Goals": "Acima/Abaixo 1.5 Gols",
+        "Over/Under 2.5 Goals": "Acima/Abaixo 2.5 Gols",
+        "Both Teams to Score": "Ambas Marcam",
+        "Correct Score": "Placar Correto",
+        "Total Goals": "Total de Gols",
+        "First Half Winner": "Resultado 1º Tempo",
+        "Correct Score - First Half": "Placar Correto 1º Tempo"
+    };
+    return traducoes[nomeOriginal] || nomeOriginal;
+}
+
+
+async function carregarOddsReais() {
+    const ligaID = document.getElementById("liga").value;
+    const filtroTime = document.getElementById("filtroTime").value.trim().toLowerCase();
+    const headers = {
+        "x-apisports-key": API_KEY,
+        "Accept": "application/json"
+    };
+
+    const hoje = new Date();
+    const dataSelecionada = hoje.toISOString().split("T")[0];
+
+    const inputs = document.getElementById("inputs");
+    const existentes = new Set(Array.from(inputs.querySelectorAll(".jogo-card")).map(card => card.dataset.id));
+
+    let todosFixtures = [];
+
+    try {
+        const temporadas = [2024, 2025];
+        for (const temporada of temporadas) {
+            const url = `https://v3.football.api-sports.io/fixtures?league=${ligaID}&season=${temporada}&date=${dataSelecionada}`;
+            const response = await fetch(url, { headers });
+            const data = await response.json();
+            if (!data.response || !Array.isArray(data.response)) continue;
+            todosFixtures = todosFixtures.concat(data.response);
+        }
+
+        for (const fixture of todosFixtures) {
+            const fixtureId = fixture.fixture.id;
+            if (existentes.has(String(fixtureId))) continue;
+
+            const dataHora = new Date(fixture.fixture.date);
+            const homeTeam = fixture.teams.home.name;
+            const awayTeam = fixture.teams.away.name;
+
+            if (filtroTime &&
+                !homeTeam.toLowerCase().includes(filtroTime) &&
+                !awayTeam.toLowerCase().includes(filtroTime)) {
+                continue;
+            }
+
+            const oddsResp = await fetch(`https://v3.football.api-sports.io/odds?fixture=${fixtureId}`, { headers });
+            const oddsJson = await oddsResp.json();
+            const oddsData = oddsJson.response[0];
+            if (!oddsData || !oddsData.bookmakers?.length) continue;
+
+            const bets = oddsData.bookmakers[0].bets;
+            const dataStr = dataHora.toLocaleDateString("pt-BR", { day: '2-digit', month: 'short' });
+            const horaStr = dataHora.toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
+
+            const mercadoPrincipal = bets.find(bet => bet.name === "Match Winner");
+            const outrosMercados = bets.filter(bet => bet.name !== "Match Winner");
+
+            let mercadoPrincipalHTML = '';
+            if (mercadoPrincipal) {
+                mercadoPrincipal.values.forEach(odd => {
+                    const nomeTraduzido = traduzirValorOdd(odd.value);
+                    const timeRelacionado = nomeTraduzido === 'Casa' ? homeTeam :
+                                            nomeTraduzido === 'Fora' ? awayTeam :
+                                            `${homeTeam} x ${awayTeam}`;
+                    mercadoPrincipalHTML += `<label>
+                    <input type="checkbox" class="jogoCheck" data-nome="${nomeTraduzido}" data-odd="${parseFloat(odd.odd).toFixed(2)}" data-jogo="${timeRelacionado}" />
+                    ${nomeTraduzido} - ${parseFloat(odd.odd).toFixed(2)}
+                    </label>`;
+                });
+            }
+
+            let maisOddsHTML = '';
+            outrosMercados.forEach((bet, index) => {
+                const nomeMercado = traduzirMercado(bet.name);
+                const mercadoId = `mercado-${fixtureId}-${index}`;
+
+                let oddsHTML = '';
+                bet.values.forEach(odd => {
+                    const valorTraduzido = traduzirValorOdd(odd.value);
+                    const timeRelacionado = ['Casa', 'Home'].includes(valorTraduzido) ? homeTeam :
+                                            ['Fora', 'Away'].includes(valorTraduzido) ? awayTeam :
+                                            `${homeTeam} x ${awayTeam}`;
+                    oddsHTML += `<label>
+                        <input type="checkbox" class="jogoCheck" data-nome="${nomeMercado}: ${valorTraduzido}" data-odd="${parseFloat(odd.odd).toFixed(2)}" data-jogo="${timeRelacionado}" />
+                        ${valorTraduzido} - ${parseFloat(odd.odd).toFixed(2)}
+                    </label>`;
+                });
+
+                maisOddsHTML += `
+                    <div style="margin-bottom: 10px;">
+                        <button class="btn-toggle-mercado" onclick="document.getElementById('${mercadoId}').style.display = (document.getElementById('${mercadoId}').style.display === 'block' ? 'none' : 'block')">➕ ${nomeMercado}</button>
+                        <div class="collapse mercado-odds" id="${mercadoId}" style="display:none;margin-top:5px;padding-left:10px;">
+                            ${oddsHTML || "<p>Sem odds disponíveis</p>"}
+                        </div>
+                    </div>
+                `;
+            });
+
+            const collapseId = `collapse-${fixtureId}`;
+            const logoHome = fixture.teams.home.logo;
+            const logoAway = fixture.teams.away.logo;
+            const logoLiga = fixture.league.logo;
+            const nomeLiga = fixture.league.name;
+
+            inputs.innerHTML += `
+                <div class="jogo-card" data-id="${fixtureId}">
+                <div class="jogo-header">
+                    <img src="${logoLiga}" alt="Liga" style="height:20px;margin-right:8px;vertical-align:middle;">
+                    ${nomeLiga}
+                </div>
+                <div class="jogo-conteudo">
+                    <div class="jogo-info">🗓️ ${dataStr} às ${horaStr}</div>
+                    <div class="jogo-times">
+                    <img src="${logoHome}" alt="${homeTeam}"> <strong>${homeTeam}</strong>
+                    <span>vs</span>
+                    <img src="${logoAway}" alt="${awayTeam}"> <strong>${awayTeam}</strong>
+                    </div>
+                    <div class="mercado-principal"><strong>Resultado Final</strong>${mercadoPrincipalHTML || "<p>Sem odds disponíveis</p>"}</div>
+                    <button class="btn-mais-odds" type="button" onclick="document.getElementById('${collapseId}').classList.toggle('show')">Ver Mais Odds</button>
+                    <div class="collapse mais-odds" id="${collapseId}" style="display:none;">
+                        <div class="card card-body">${maisOddsHTML || "<p>Sem mais odds disponíveis</p>"}</div>
+                    </div>
+                </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar dados. Verifique o console.');
+    }
+}
+
+
+document.addEventListener('click', function(e){
+    if (e.target && e.target.classList.contains('btn-mais-odds')) {
+        const target = e.target.nextElementSibling;
+        if (target.style.display === 'block') {
+            target.style.display = 'none';
+            e.target.innerText = 'Ver Mais Odds';
+        } else {
+            target.style.display = 'block';
+            e.target.innerText = 'Ver Menos Odds';
+        }
+    }
+});
+
+function gerarCombinacoes(array, k) {
+    let res = [];
+    function comb(start, combo) {
+        if (combo.length === k) return res.push(combo);
+        for (let i = start; i < array.length; i++) {
+            comb(i + 1, combo.concat([array[i]]));
+        }
+    }
+    comb(0, []);
+    return res;
+}
+
+function gerarDesdobramento() {
+    const tipoDesdobramento = parseInt(document.getElementById("tipoDesdobramento").value);
+    const stake = parseFloat(document.getElementById("stake").value);
+    const checkboxes = document.querySelectorAll(".jogoCheck:checked");
+
+    if (checkboxes.length < tipoDesdobramento) {
+        alert(`Você selecionou apenas ${checkboxes.length} jogos, mas escolheu um desdobramento de ${tipoDesdobramento}.`);
+        return;
+    }
+
+    if (isNaN(stake) || stake <= 0) {
+        alert("Insira um valor válido para a aposta.");
+        return;
+    }
+
+    const jogos = Array.from(checkboxes).map(cb => ({
+        jogo: cb.dataset.nome,
+        odd: parseFloat(cb.dataset.odd),
+        partida: cb.dataset.jogo
+    }));
+
+    const combinacoes = gerarCombinacoes(jogos, tipoDesdobramento);
+    let html = `<h3>Combinações ${tipoDesdobramento}</h3>`;
+    let totalRetorno = 0;
+
+    combinacoes.forEach((combo, i) => {
+        const oddTotal = combo.reduce((acc, cur) => acc * cur.odd, 1);
+        const retorno = stake * oddTotal;
+        totalRetorno += retorno;
+        const selecoes = combo.map(j => `- ${j.jogo} (${j.partida})`).join("<br>");
+        html += `<div style="background:#fff;border-radius:10px;padding:12px;margin-bottom:15px;box-shadow:0 2px 8px rgba(0,0,0,0.1);color:#000;">
+        <div style="color:#ff7f00;font-weight:bold;font-size:1rem;">🎟️ Bilhete ${i + 1} - Odd Total: ${oddTotal.toFixed(2)}</div>
+        <div style="margin:6px 0 8px 0;font-size:0.95rem;line-height:1.4;">${selecoes}</div>
+        <div style="color:green;font-weight:bold;font-size:0.95rem;">💰 Retorno: R$ ${retorno.toFixed(2)}</div>
+        </div>`;
+    });
+
+    const totalApostado = (combinacoes.length * stake).toFixed(2);
+    html += `<p><strong>📦 Total de combinações:</strong> ${combinacoes.length}</p><p><strong>💸 Total Apostado:</strong> R$ ${totalApostado}</p><p style="color:green;"><strong>🔮 Retorno máximo se acertar todos:</strong> R$ ${totalRetorno.toFixed(2)}</p>`;
+    document.getElementById("resultado").innerHTML = html;
+}
+
+function exportarPDF() {
+    const resultado = document.getElementById("resultado");
+    if (!resultado.innerHTML.trim()) {
+        alert("Gere os bilhetes antes de exportar.");
+        return;
+    }
+    const janela = window.open('', '', 'width=800,height=600');
+    janela.document.write(`<html><head><title>Bilhetes - L.A Cashback VIP 👑</title></head><body>
+
+<audio id="bgMusic" loop>
+  <source src="musica.mp3" type="audio/mpeg">
+  Seu navegador não suporta áudio.
+</audio>
+
+<button onclick="document.getElementById('bgMusic').play()" style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #ff7f00;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  z-index: 999;
+">🔊</button>
+<h2>Bilhetes - L.A Cashback VIP 👑</h2>${resultado.innerHTML}</body></html>`);
+    janela.document.close();
+    janela.print();
+}
+
+function compartilharWhatsApp() {
+    const resultado = document.getElementById("resultado");
+    if (!resultado.innerHTML.trim()) {
+        alert("Gere os bilhetes antes de compartilhar.");
+        return;
+    }
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = resultado.innerHTML;
+    let texto = tempDiv.innerText;
+    texto = "🔥 *L.A Cashback VIP 👑* 🔥\n\n" + texto.trim();
+    texto = texto.replace(/Bilhete (\d+)/g, "🎟️ Bilhete $1");
+    texto = texto.replace(/Retorno: R\$/, "💰 Retorno: R$");
+    texto = texto.replace(/Total Apostado:/, "💸 Total Apostado:");
+    texto = texto.replace(/Total de combinações:/, "📦 Total de combinações:");
+    texto = texto.replace(/Retorno máximo se acertar todos:/, "🔮 Retorno máximo:");
+    texto += "\n\n🤝 Powered by L.A Cashback VIP 👑";
+    const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+    window.open(url, "_blank");
+}
+</script>
+</body>
+</html>
