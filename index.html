@@ -263,37 +263,39 @@ function traduzirValorOdd(valor) {
 function traduzirMercado(nomeOriginal) {
     const traducoes = {
         
-    "Win Both Halves": "Vencer Ambos os Tempos",
-    "Total - Home": "Total - Casa",
-    "Total - Away": "Total - Fora",
-    "Handicap Result - First Half": "Resultado com Handicap - 1º Tempo",
-    "Double Chance - First Half": "Dupla Chance - 1º Tempo",
-    "Double Chance - Second Half": "Dupla Chance - 2º Tempo",
-    "Both Teams Score - First Half": "Ambas Marcam - 1º Tempo",
-    "Both Teams To Score - Second Half": "Ambas Marcam - 2º Tempo",
-    "Odd/Even": "Ímpar/Par",
-    "Odd/Even - First Half": "Ímpar/Par - 1º Tempo",
-    "Results/Both Teams Score": "Resultado/Ambas Marcam",
-    "Result/Total Goals": "Resultado/Total de Gols",
-    "Home Team Score a Goal": "Time da Casa Marca um Gol",
-    "Away Team Score a Goal": "Time Visitante Marca um Gol",
-    "Corners 1x2": "Escanteios 1x2",
-    "Corners Over Under": "Escanteios Acima/Abaixo",
-    "Home/Away": "Casa/Fora",
-    "Second Half Winner": "Resultado 2º Tempo",
-    "Asian Handicap": "Handicap Asiático",
-    "Goals Over/Under": "Gols Acima/Abaixo",
-    "Goals Over/Under First Half": "Gols Acima/Abaixo - 1º Tempo",
-    "Goals Over/Under - Second Half": "Gols Acima/Abaixo - 2º Tempo",
-    "Both Teams Score": "Ambas Marcam",
-    "Handicap Result": "Resultado com Handicap",
-    "Exact Score": "Placar Correto",
-    "Highest Scoring Half": "Tempo com Mais Gols",
-    "Correct Score - First Half": "Placar Correto 1º Tempo",
-    "Correct Score - Second Half": "Placar Correto 2º Tempo",
-    "Double Chance": "Dupla Chance",
-    "First Half Winner": "Resultado 1º Tempo",
-    "Team To Score First": "Equipe a Marcar Primeiro"
+    
+  
+    "1x2 - 60 minutes": "1x2 - 60 minutos",
+    "1x2 - 30 minutes": "1x2 - 30 minutos",
+    "Total Corners (1st Half)": "Total de Escanteios (1º Tempo)",
+    "Cards Over/Under": "Cartões Acima/Abaixo",
+    "Cards Asian Handicap": "Handicap Asiático de Cartões",
+    "Home Team Total Cards": "Total de Cartões - Time da Casa",
+    "Away Team Total Cards": "Total de Cartões - Time Visitante",
+    "Total ShotOnGoal": "Total de Finalizações no Gol",
+    "Away Team Total Goals(2nd Half)": "Total de Gols - Time Visitante (2º Tempo)",
+    "Draw No Bet (1st Half)": "Empate Anula Aposta (1º Tempo)",
+    "Draw No Bet (2nd Half)": "Empate Anula Aposta (2º Tempo)",
+    "Home team will score in both halves": "Time da Casa Marcará em Ambos os Tempos",
+    "Away team will score in both halves": "Time Visitante Marcará em Ambos os Tempos",
+    "Corners Asian Handicap": "Handicap Asiático de Escanteios",
+    "Home Corners Over/Under": "Escanteios do Time da Casa Acima/Abaixo",
+    "Away Corners Over/Under": "Escanteios do Time Visitante Acima/Abaixo",
+    "Own Goal": "Gol Contra",
+    "Away Team Exact Goals Number": "Número Exato de Gols - Time Visitante",
+    "First 10 min Winner": "Vencedor nos Primeiros 10 Minutos",
+    "Exact Goals Number - First Half": "Número Exato de Gols - 1º Tempo",
+    "Away Team Total Goals(1st Half)": "Total de Gols - Time Visitante (1º Tempo)",
+    "Home Team Total Goals(1st Half)": "Total de Gols - Time da Casa (1º Tempo)",
+    "Home Team Total Goals(2nd Half)": "Total de Gols - Time da Casa (2º Tempo)",
+    "Home win both halves": "Time da Casa Vence Ambos os Tempos",
+    "Away win both halves": "Time Visitante Vence Ambos os Tempos",
+    "Exact Goals Number": "Número Exato de Gols",
+    "To Win Either Half": "Vencer Qualquer Tempo",
+    "Home Team Exact Goals Number": "Número Exato de Gols - Time da Casa",
+    "Away Team Exact Goals Number": "Número Exato de Gols - Time Visitante"
+
+
 
 
     };
@@ -349,7 +351,11 @@ async function carregarOddsReais() {
             const oddsData = oddsJson.response[0];
             if (!oddsData || !oddsData.bookmakers?.length) continue;
 
-            const bets = oddsData.bookmakers[0].bets;
+            
+const betano = oddsData.bookmakers.find(b => b.name.toLowerCase().includes("betano"));
+if (!betano) return;
+const bets = betano.bets;
+
             const dataStr = dataHora.toLocaleDateString("pt-BR", { day: '2-digit', month: 'short' });
             const horaStr = dataHora.toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
 
