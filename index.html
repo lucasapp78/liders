@@ -380,6 +380,7 @@ input[type="checkbox"]:checked + label {
 
 
 <button onclick="carregarOddsReais()">🔄 Carregar Jogos do Dia</button>
+<button onclick="carregarJogosAoVivo(); iniciarAutoAtualizacaoAoVivo();">📺 Jogos Ao Vivo</button>
 
 <label>Tipo de aposta (acertos):</label>
 <select id="tipoDesdobramento">
@@ -857,6 +858,110 @@ function atualizarRetorno() {
 function toggleBilhete() {
     const bilhete = document.getElementById('bilhete');
     bilhete.style.display = (bilhete.style.display === 'block') ? 'none' : 'block';
+}
+
+
+
+async function carregarJogosAoVivo() {
+    const headers = {
+        "x-apisports-key": API_KEY,
+        "Accept": "application/json"
+    };
+
+    const inputs = document.getElementById("inputs");
+    inputs.innerHTML = ""; // limpa jogos anteriores
+    const existentes = new Set();
+
+    try {
+        const url = "https://v3.football.api-sports.io/fixtures?live=all";
+        const response = await fetch(url, { headers });
+        const data = await response.json();
+        const jogos = data.response;
+
+        if (!jogos.length) {
+            inputs.innerHTML = "<p style='color:#ff7f00;'>⚠️ Nenhum jogo ao vivo no momento.</p>";
+            return;
+        }
+
+        for (const fixture of jogos) {
+            const fixtureId = fixture.fixture.id;
+            if (existentes.has(String(fixtureId))) continue;
+
+            const homeTeam = fixture.teams.home.name;
+            const awayTeam = fixture.teams.away.name;
+            const tempo = fixture.fixture.status.elapsed || "0";
+            const logoHome = fixture.teams.home.logo;
+            const logoAway = fixture.teams.away.logo;
+            const logoLiga = fixture.league.logo;
+            const nomeLiga = fixture.league.name;
+            const score = fixture.goals;
+
+            let corHome = 'white', corAway = 'white';
+            if (score.home > score.away) {
+                corHome = 'limegreen'; corAway = 'crimson';
+            } else if (score.home < score.away) {
+                corHome = 'crimson'; corAway = 'limegreen';
+            } else {
+                corHome = corAway = 'gold';
+            }
+
+            const oddsResp = await fetch(`https://v3.football.api-sports.io/odds?fixture=${fixtureId}`, { headers });
+            const oddsJson = await oddsResp.json();
+            const oddsData = oddsJson.response[0];
+            if (!oddsData || !oddsData.bookmakers?.length) continue;
+
+            const betano = oddsData.bookmakers.find(b => b.name.toLowerCase().includes("betano"));
+            if (!betano) continue;
+            const bets = betano.bets;
+
+            const mercadoPrincipal = bets.find(bet => bet.name === "Match Winner");
+
+            let mercadoPrincipalHTML = '';
+            if (mercadoPrincipal) {
+                mercadoPrincipal.values.forEach(odd => {
+                    const nomeTraduzido = traduzirValorOdd(odd.value);
+                    const timeRelacionado = nomeTraduzido === 'Casa' ? homeTeam :
+                                            nomeTraduzido === 'Fora' ? awayTeam :
+                                            `${homeTeam} x ${awayTeam}`;
+                    mercadoPrincipalHTML += `<label>
+                        <input type="checkbox" class="jogoCheck" data-nome="${nomeTraduzido}" data-odd="${parseFloat(odd.odd).toFixed(2)}" data-jogo="${timeRelacionado}" />
+                        ${nomeTraduzido} - ${parseFloat(odd.odd).toFixed(2)}
+                    </label>`;
+                });
+            }
+
+            inputs.innerHTML += `
+                <div class="jogo-card" data-id="${fixtureId}">
+                    <div class="jogo-header">
+                        <img src="${logoLiga}" alt="Liga" style="height:20px;margin-right:8px;vertical-align:middle;">
+                        ${nomeLiga} - ⏱️ ${tempo}' ao vivo
+                    </div>
+                    <div class="jogo-times" style="gap: 10px;">
+                        <img src="${logoHome}" alt="${homeTeam}">
+                        <strong style="color:${corHome}">${homeTeam}</strong>
+                        <span style="font-size: 1.2rem; font-weight: bold;">[${score.home} - ${score.away}]</span>
+                        <strong style="color:${corAway}">${awayTeam}</strong>
+                        <img src="${logoAway}" alt="${awayTeam}">
+                    </div>
+                    <div class="mercado-principal"><strong>Resultado Final</strong>${mercadoPrincipalHTML || "<p>Sem odds disponíveis</p>"}</div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error("Erro ao buscar jogos ao vivo:", error);
+        inputs.innerHTML = "<p style='color:red;'>❌ Erro ao buscar jogos ao vivo.</p>";
+    }
+}
+
+let atualizacaoAoVivoAtiva = false;
+function iniciarAutoAtualizacaoAoVivo() {
+    if (atualizacaoAoVivoAtiva) return;
+    atualizacaoAoVivoAtiva = true;
+    setInterval(() => {
+        if (document.hasFocus()) {
+            carregarJogosAoVivo();
+        }
+    }, 30000);
 }
 
 </script>
