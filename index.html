@@ -127,6 +127,38 @@ button:hover {
 .btn-mais-odds:hover {
     background-color: #444;
 }
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        font-size: 14px;
+    }
+    h2 {
+        font-size: 1.2rem;
+    }
+    .jogo-card {
+        padding: 12px;
+    }
+    .jogo-times {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .jogo-times img {
+        width: 40px;
+        height: 40px;
+    }
+    .mercado-principal label {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+    .btn-mais-odds, .btn-toggle-mercado {
+        width: 100%;
+    }
+    input, select, button {
+        font-size: 1rem;
+    }
+}
+
 </style>
 </head>
 <body>
@@ -157,17 +189,36 @@ button:hover {
 
 <label>Campeonato:</label>
 <select id="liga">
-<option value="71">Brasileirão Série A</option>
-<option value="72">Série B</option>
-<option value="73">Copa do Brasil</option>
-<option value="9">Libertadores</option>
-<option value="39">Premier League</option>
-<option value="140">La Liga</option>
-<option value="2">Champions League</option>
+  <option value="71">🇧🇷 Brasileirão Série A</option>
+  <option value="72">🇧🇷 Série B</option>
+  <option value="73">🇧🇷 Copa do Brasil</option>
+  <option value="9">🌎 Libertadores</option>
+  <option value="2">🌍 Champions League</option>
+  <option value="3">🌍 Europa League</option>
+  <option value="848">🌍 Conference League</option>
+  <option value="39">🏴 Premier League (Inglaterra)</option>
+  <option value="140">🇪🇸 La Liga (Espanha)</option>
+  <option value="78">🇮🇹 Serie A (Itália)</option>
+  <option value="61">🇫🇷 Ligue 1 (França)</option>
+  <option value="195">🇩🇪 Bundesliga (Alemanha)</option>
+  <option value="94">🇵🇹 Primeira Liga (Portugal)</option>
+  <option value="88">🇳🇱 Eredivisie (Holanda)</option>
+  <option value="253">🇺🇸 MLS (EUA)</option>
+  <option value="135">🇧🇷 Paulistão A1</option>
 </select>
+
 
 <label>Filtrar por Time:</label>
 <input type="text" id="filtroTime" placeholder="Ex: Flamengo, Chelsea, Real Madrid">
+<label>Filtrar por Data:</label>
+<input type="date" id="dataFiltro">
+
+<label>Odd Mínima:</label>
+<input type="number" id="oddMin" placeholder="Ex: 1.50" step="0.01">
+
+<label>Odd Máxima:</label>
+<input type="number" id="oddMax" placeholder="Ex: 3.00" step="0.01">
+
 
 <button onclick="carregarOddsReais()">🔄 Carregar Jogos do Dia</button>
 
@@ -211,17 +262,40 @@ function traduzirValorOdd(valor) {
 
 function traduzirMercado(nomeOriginal) {
     const traducoes = {
-        "Match Winner": "Resultado Final",
-        "Second Half Winner": "Resultado 2º Tempo",
-        "Asian Handicap": "Handicap Asiático",
-        "Home/Away": "Casa/Fora",
-        "Over/Under 1.5 Goals": "Acima/Abaixo 1.5 Gols",
-        "Over/Under 2.5 Goals": "Acima/Abaixo 2.5 Gols",
-        "Both Teams to Score": "Ambas Marcam",
-        "Correct Score": "Placar Correto",
-        "Total Goals": "Total de Gols",
-        "First Half Winner": "Resultado 1º Tempo",
-        "Correct Score - First Half": "Placar Correto 1º Tempo"
+        
+    "Win Both Halves": "Vencer Ambos os Tempos",
+    "Total - Home": "Total - Casa",
+    "Total - Away": "Total - Fora",
+    "Handicap Result - First Half": "Resultado com Handicap - 1º Tempo",
+    "Double Chance - First Half": "Dupla Chance - 1º Tempo",
+    "Double Chance - Second Half": "Dupla Chance - 2º Tempo",
+    "Both Teams Score - First Half": "Ambas Marcam - 1º Tempo",
+    "Both Teams To Score - Second Half": "Ambas Marcam - 2º Tempo",
+    "Odd/Even": "Ímpar/Par",
+    "Odd/Even - First Half": "Ímpar/Par - 1º Tempo",
+    "Results/Both Teams Score": "Resultado/Ambas Marcam",
+    "Result/Total Goals": "Resultado/Total de Gols",
+    "Home Team Score a Goal": "Time da Casa Marca um Gol",
+    "Away Team Score a Goal": "Time Visitante Marca um Gol",
+    "Corners 1x2": "Escanteios 1x2",
+    "Corners Over Under": "Escanteios Acima/Abaixo",
+    "Home/Away": "Casa/Fora",
+    "Second Half Winner": "Resultado 2º Tempo",
+    "Asian Handicap": "Handicap Asiático",
+    "Goals Over/Under": "Gols Acima/Abaixo",
+    "Goals Over/Under First Half": "Gols Acima/Abaixo - 1º Tempo",
+    "Goals Over/Under - Second Half": "Gols Acima/Abaixo - 2º Tempo",
+    "Both Teams Score": "Ambas Marcam",
+    "Handicap Result": "Resultado com Handicap",
+    "Exact Score": "Placar Correto",
+    "Highest Scoring Half": "Tempo com Mais Gols",
+    "Correct Score - First Half": "Placar Correto 1º Tempo",
+    "Correct Score - Second Half": "Placar Correto 2º Tempo",
+    "Double Chance": "Dupla Chance",
+    "First Half Winner": "Resultado 1º Tempo",
+    "Team To Score First": "Equipe a Marcar Primeiro"
+
+
     };
     return traducoes[nomeOriginal] || nomeOriginal;
 }
@@ -235,8 +309,11 @@ async function carregarOddsReais() {
         "Accept": "application/json"
     };
 
-    const hoje = new Date();
-    const dataSelecionada = hoje.toISOString().split("T")[0];
+    const dataInput = document.getElementById("dataFiltro").value;
+    const dataSelecionada = dataInput ? dataInput : new Date().toISOString().split("T")[0];
+
+    const oddMin = parseFloat(document.getElementById("oddMin").value) || 0;
+    const oddMax = parseFloat(document.getElementById("oddMax").value) || Infinity;
 
     const inputs = document.getElementById("inputs");
     const existentes = new Set(Array.from(inputs.querySelectorAll(".jogo-card")).map(card => card.dataset.id));
@@ -282,6 +359,8 @@ async function carregarOddsReais() {
             let mercadoPrincipalHTML = '';
             if (mercadoPrincipal) {
                 mercadoPrincipal.values.forEach(odd => {
+                    const oddValor = parseFloat(odd.odd);
+                    if (oddValor < oddMin || oddValor > oddMax) return;
                     const nomeTraduzido = traduzirValorOdd(odd.value);
                     const timeRelacionado = nomeTraduzido === 'Casa' ? homeTeam :
                                             nomeTraduzido === 'Fora' ? awayTeam :
@@ -300,6 +379,8 @@ async function carregarOddsReais() {
 
                 let oddsHTML = '';
                 bet.values.forEach(odd => {
+                    const oddValor = parseFloat(odd.odd);
+                    if (oddValor < oddMin || oddValor > oddMax) return;
                     const valorTraduzido = traduzirValorOdd(odd.value);
                     const timeRelacionado = ['Casa', 'Home'].includes(valorTraduzido) ? homeTeam :
                                             ['Fora', 'Away'].includes(valorTraduzido) ? awayTeam :
