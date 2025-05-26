@@ -159,9 +159,168 @@ button:hover {
     }
 }
 
+
+/* Animações sofisticadas */
+
+.jogo-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.8s ease forwards;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mercado-principal label:hover,
+.btn-mais-odds:hover,
+button:hover {
+    background-color: #ff7f00;
+    color: #121212;
+    box-shadow: 0 0 10px #ff7f00, 0 0 20px #ff7f00;
+    transition: all 0.3s ease;
+}
+
+button[onclick*="bgMusic"] {
+    animation: pulse 1.8s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 127, 0, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 127, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 127, 0, 0);
+    }
+}
+
+.jogo-times img {
+    transition: transform 0.3s ease;
+}
+
+.jogo-times img:hover {
+    transform: scale(1.2);
+}
+
+
+/* === Estilo Premium para Odds === */
+input[type="checkbox"] {
+    display: none;
+}
+.mercado-principal label,
+.mais-odds label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #2c2c2c;
+    border: 2px solid #444;
+    border-radius: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+.mercado-principal label:hover,
+.mais-odds label:hover {
+    background-color: #ff7f00;
+    color: #121212;
+    box-shadow: 0 0 10px #ff7f00, 0 0 20px #ff7f00;
+}
+input[type="checkbox"]:checked + label {
+    background-color: #ff7f00;
+    color: #121212;
+    border-color: #ff7f00;
+    box-shadow: 0 0 10px #ff7f00, 0 0 20px #ff7f00;
+}
+
+
+.bilhete-lateral {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 300px;
+    background: #1a1a1a;
+    border: 2px solid #ff7f00;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.7);
+    color: white;
+    z-index: 999;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.bilhete-lateral h3 {
+    margin-top: 0;
+    color: #ff7f00;
+    text-align: center;
+}
+#bilhete-selecoes {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+#resultado-desdobramento {
+    margin-top: 10px;
+    background: #121212;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+#botao-bilhete {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #ff7f00;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    z-index: 1000;
+}
+@media (max-width: 768px) {
+    .bilhete-lateral {
+        display: none;
+        width: 90%;
+        left: 5%;
+        right: 5%;
+        top: 80px;
+    }
+    #botao-bilhete {
+        display: block;
+    }
+}
+
 </style>
 </head>
 <body>
+
+<div id="bilhete" class="bilhete-lateral">
+  <h3>🎯 Desdobramento</h3>
+  <div id="bilhete-selecoes"></div>
+  <label>Acertos desejados:</label>
+  <select id="acertos-desejados"></select>
+  <label>Valor por combinação (R$):</label>
+  <input type="number" id="valor-aposta" placeholder="10.00" step="0.01" oninput="atualizarRetorno()">
+  <div id="resultado-desdobramento"></div>
+  <button onclick="limparSelecoes()">🧹 Limpar</button>
+  <button onclick="exportarPDF()">📄 PDF</button>
+  <button onclick="compartilharWhatsApp()">📤 WhatsApp</button>
+</div>
+<button id="botao-bilhete" onclick="toggleBilhete()">🎯</button>
+
 
 <audio id="bgMusic" loop>
   <source src="musica.mp3" type="audio/mpeg">
@@ -540,6 +699,21 @@ function exportarPDF() {
     const janela = window.open('', '', 'width=800,height=600');
     janela.document.write(`<html><head><title>Bilhetes - L.A Cashback VIP 👑</title></head><body>
 
+<div id="bilhete" class="bilhete-lateral">
+  <h3>🎯 Desdobramento</h3>
+  <div id="bilhete-selecoes"></div>
+  <label>Acertos desejados:</label>
+  <select id="acertos-desejados"></select>
+  <label>Valor por combinação (R$):</label>
+  <input type="number" id="valor-aposta" placeholder="10.00" step="0.01" oninput="atualizarRetorno()">
+  <div id="resultado-desdobramento"></div>
+  <button onclick="limparSelecoes()">🧹 Limpar</button>
+  <button onclick="exportarPDF()">📄 PDF</button>
+  <button onclick="compartilharWhatsApp()">📤 WhatsApp</button>
+</div>
+<button id="botao-bilhete" onclick="toggleBilhete()">🎯</button>
+
+
 <audio id="bgMusic" loop>
   <source src="musica.mp3" type="audio/mpeg">
   Seu navegador não suporta áudio.
@@ -584,6 +758,107 @@ function compartilharWhatsApp() {
     const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
     window.open(url, "_blank");
 }
+
+function atualizarBilhete() {
+    const checks = document.querySelectorAll('.jogoCheck:checked');
+    const bilheteDiv = document.getElementById('bilhete-selecoes');
+    const acertosSelect = document.getElementById('acertos-desejados');
+    bilheteDiv.innerHTML = '';
+    acertosSelect.innerHTML = '';
+
+    if (checks.length === 0) {
+        acertosSelect.innerHTML = '<option disabled selected>Sem seleções</option>';
+        document.getElementById("resultado-desdobramento").innerHTML = '<p>Selecione odds para gerar o desdobramento.</p>';
+        return;
+    }
+
+    checks.forEach(cb => {
+        const nome = cb.dataset.nome;
+        const jogo = cb.dataset.jogo;
+        const item = document.createElement('div');
+        item.style.marginBottom = '6px';
+        item.innerHTML = `✅ <strong>${nome}</strong> (${jogo})`;
+        bilheteDiv.appendChild(item);
+    });
+
+    const maxAcertos = Math.min(20, checks.length);
+  for (let i = 1; i <= checks.length; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `Acertar ${i}`;
+        acertosSelect.appendChild(opt);
+    }
+
+    gerarDesdobramentoNoBilhete();
+}
+
+function gerarCombinacoes(array, k) {
+    let res = [];
+    function comb(start, combo) {
+        if (combo.length === k) return res.push(combo);
+        for (let i = start; i < array.length; i++) {
+            comb(i + 1, combo.concat([array[i]]));
+        }
+    }
+    comb(0, []);
+    return res;
+}
+
+function gerarDesdobramentoNoBilhete() {
+    const tipoDesdobramento = parseInt(document.getElementById("acertos-desejados").value);
+    const stake = parseFloat(document.getElementById("valor-aposta").value);
+    const checks = document.querySelectorAll(".jogoCheck:checked");
+
+    const resultadoDiv = document.getElementById("resultado-desdobramento");
+    if (checks.length < tipoDesdobramento) {
+        resultadoDiv.innerHTML = '<p>Selecione mais jogos para esse desdobramento.</p>';
+        return;
+    }
+
+    const jogos = Array.from(checks).map(cb => ({
+        jogo: cb.dataset.nome,
+        odd: parseFloat(cb.dataset.odd),
+        partida: cb.dataset.jogo
+    }));
+
+    const combinacoes = gerarCombinacoes(jogos, tipoDesdobramento);
+    let html = '';
+    let totalRetorno = 0;
+
+    combinacoes.forEach((combo, i) => {
+        const oddTotal = combo.reduce((acc, cur) => acc * cur.odd, 1);
+        const retorno = (stake || 0) * oddTotal;
+        totalRetorno += retorno;
+        const selecoes = combo.map(j => `- ${j.jogo} (${j.partida})`).join("<br>");
+        html += `<div style="background:#fff;border-radius:10px;padding:8px;margin-bottom:8px;color:#000;">
+        <div style="color:#ff7f00;font-weight:bold;">🎟️ Bilhete ${i + 1} - Odd: ${oddTotal.toFixed(2)}</div>
+        <div style="margin:6px 0;">${selecoes}</div>
+        <div style="color:green;">💰 Retorno: R$ ${retorno.toFixed(2)}</div>
+        </div>`;
+    });
+
+    const totalApostado = (combinacoes.length * (stake || 0)).toFixed(2);
+    html += `<p><strong>📦 Total de bilhetes:</strong> ${combinacoes.length}</p>
+             <p><strong>💸 Total Apostado:</strong> R$ ${totalApostado}</p>
+             <p style="color:green;"><strong>🔮 Retorno máximo:</strong> R$ ${totalRetorno.toFixed(2)}</p>`;
+    resultadoDiv.innerHTML = html;
+}
+
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.classList.contains('jogoCheck')) {
+        atualizarBilhete();
+    }
+});
+
+function atualizarRetorno() {
+    gerarDesdobramentoNoBilhete();
+}
+
+function toggleBilhete() {
+    const bilhete = document.getElementById('bilhete');
+    bilhete.style.display = (bilhete.style.display === 'block') ? 'none' : 'block';
+}
+
 </script>
 </body>
 </html>
