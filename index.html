@@ -915,6 +915,7 @@ async function carregarJogosAoVivo() {
             const bets = betano.bets;
 
             const mercadoPrincipal = bets.find(bet => bet.name === "Match Winner");
+            const outrosMercados = bets.filter(bet => bet.name !== "Match Winner");
 
             let mercadoPrincipalHTML = '';
             if (mercadoPrincipal) {
@@ -930,6 +931,35 @@ async function carregarJogosAoVivo() {
                 });
             }
 
+            let maisOddsHTML = '';
+            outrosMercados.forEach((bet, index) => {
+                const nomeMercado = traduzirMercado(bet.name);
+                const mercadoId = `mercado-live-${fixtureId}-${index}`;
+
+                let oddsHTML = '';
+                bet.values.forEach(odd => {
+                    const valorTraduzido = traduzirValorOdd(odd.value);
+                    const timeRelacionado = ['Casa', 'Home'].includes(valorTraduzido) ? homeTeam :
+                                            ['Fora', 'Away'].includes(valorTraduzido) ? awayTeam :
+                                            `${homeTeam} x ${awayTeam}`;
+                    oddsHTML += `<label>
+                        <input type="checkbox" class="jogoCheck" data-nome="${nomeMercado}: ${valorTraduzido}" data-odd="${parseFloat(odd.odd).toFixed(2)}" data-jogo="${timeRelacionado}" />
+                        ${valorTraduzido} - ${parseFloat(odd.odd).toFixed(2)}
+                    </label>`;
+                });
+
+                maisOddsHTML += `
+                    <div style="margin-bottom: 10px;">
+                        <button class="btn-toggle-mercado" onclick="document.getElementById('${mercadoId}').style.display = (document.getElementById('${mercadoId}').style.display === 'block' ? 'none' : 'block')">➕ ${nomeMercado}</button>
+                        <div class="collapse mercado-odds" id="${mercadoId}" style="display:none;margin-top:5px;padding-left:10px;">
+                            ${oddsHTML || "<p>Sem odds disponíveis</p>"}
+                        </div>
+                    </div>
+                `;
+            });
+
+            const collapseId = `collapse-live-${fixtureId}`;
+
             inputs.innerHTML += `
                 <div class="jogo-card" data-id="${fixtureId}">
                     <div class="jogo-header">
@@ -943,7 +973,11 @@ async function carregarJogosAoVivo() {
                         <strong style="color:${corAway}">${awayTeam}</strong>
                         <img src="${logoAway}" alt="${awayTeam}">
                     </div>
-                    <div class="mercado-principal"><strong>Resultado Final</strong>${mercadoPrincipalHTML || "<p>Sem odds disponíveis</p>"}</div>
+                    <div class="mercado-principal"><strong>Resultado Final</strong>${mercadoPrincipalHTML}</div>
+                    <button class="btn-mais-odds" type="button" onclick="document.getElementById('${collapseId}').classList.toggle('show')">Ver Mais Odds</button>
+                    <div class="collapse mais-odds" id="${collapseId}" style="display:none;">
+                        <div class="card card-body">${maisOddsHTML || "<p>Sem mais odds disponíveis</p>"}</div>
+                    </div>
                 </div>
             `;
         }
