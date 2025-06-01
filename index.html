@@ -304,65 +304,7 @@ input[type="checkbox"]:checked + label {
 
 </style>
 </head>
-<body style='display:none;'>
-
-<!-- LOGIN POR TOKEN -->
-<div id="login" style="text-align:center; padding: 40px;">
-  <h2>🔐 Acesso Restrito</h2>
-  <input type="text" id="tokenInput" placeholder="Digite seu token" style="padding:10px;border-radius:8px;border:none;width:200px;">
-  <br><br>
-  <button onclick="validarToken()" style="padding:10px 20px;border:none;border-radius:8px;background-color:#ff7f00;color:#fff;cursor:pointer;">Entrar</button>
-  <p id="loginMsg" style="color: red;"></p>
-</div>
-<script>
-  const URL_TOKENS = "https://lucasapp78.github.io/liders/tokens.json";
-  async function validarToken() {
-    const tokenDigitado = document.getElementById("tokenInput").value.trim();
-    const msg = document.getElementById("loginMsg");
-    try {
-      const res = await fetch(URL_TOKENS);
-      const tokens = await res.json();
-      const agora = new Date();
-      const tokenObj = tokens.find(t =>
-        t.token === tokenDigitado &&
-        new Date(t.expira_em) > agora
-      );
-      if (!tokenObj) {
-        msg.textContent = "Token inválido ou expirado.";
-        return;
-      }
-      localStorage.setItem("token_ativo", tokenDigitado);
-      document.getElementById("login").style.display = "none";
-      document.body.style.display = "block";
-    } catch (e) {
-      msg.textContent = "Erro ao verificar token.";
-      console.error(e);
-    }
-  }
-  window.addEventListener("DOMContentLoaded", async () => {
-    document.body.style.display = "none";
-    const tokenSalvo = localStorage.getItem("token_ativo");
-    if (!tokenSalvo) {
-      document.getElementById("login").style.display = "block";
-      return;
-    }
-    try {
-      const res = await fetch(URL_TOKENS);
-      const tokens = await res.json();
-      const tokenObj = tokens.find(t => t.token === tokenSalvo);
-      if (tokenObj && new Date(tokenObj.expira_em) > new Date()) {
-        document.getElementById("login").style.display = "none";
-        document.body.style.display = "block";
-      } else {
-        localStorage.removeItem("token_ativo");
-        document.getElementById("login").style.display = "block";
-      }
-    } catch (e) {
-      console.error("Erro ao verificar token salvo:", e);
-    }
-  });
-</script>
-
+<body>
 
 <div id="bilhete" class="bilhete-lateral">
   <h3>🎯 Desdobramento</h3>
@@ -758,65 +700,7 @@ function exportarPDF() {
         return;
     }
     const janela = window.open('', '', 'width=800,height=600');
-    janela.document.write(`<html><head><title>Bilhetes - L.A Cashback VIP 👑</title></head><body style='display:none;'>
-
-<!-- LOGIN POR TOKEN -->
-<div id="login" style="text-align:center; padding: 40px;">
-  <h2>🔐 Acesso Restrito</h2>
-  <input type="text" id="tokenInput" placeholder="Digite seu token" style="padding:10px;border-radius:8px;border:none;width:200px;">
-  <br><br>
-  <button onclick="validarToken()" style="padding:10px 20px;border:none;border-radius:8px;background-color:#ff7f00;color:#fff;cursor:pointer;">Entrar</button>
-  <p id="loginMsg" style="color: red;"></p>
-</div>
-<script>
-  const URL_TOKENS = "https://lucasapp78.github.io/liders/tokens.json";
-  async function validarToken() {
-    const tokenDigitado = document.getElementById("tokenInput").value.trim();
-    const msg = document.getElementById("loginMsg");
-    try {
-      const res = await fetch(URL_TOKENS);
-      const tokens = await res.json();
-      const agora = new Date();
-      const tokenObj = tokens.find(t =>
-        t.token === tokenDigitado &&
-        new Date(t.expira_em) > agora
-      );
-      if (!tokenObj) {
-        msg.textContent = "Token inválido ou expirado.";
-        return;
-      }
-      localStorage.setItem("token_ativo", tokenDigitado);
-      document.getElementById("login").style.display = "none";
-      document.body.style.display = "block";
-    } catch (e) {
-      msg.textContent = "Erro ao verificar token.";
-      console.error(e);
-    }
-  }
-  window.addEventListener("DOMContentLoaded", async () => {
-    document.body.style.display = "none";
-    const tokenSalvo = localStorage.getItem("token_ativo");
-    if (!tokenSalvo) {
-      document.getElementById("login").style.display = "block";
-      return;
-    }
-    try {
-      const res = await fetch(URL_TOKENS);
-      const tokens = await res.json();
-      const tokenObj = tokens.find(t => t.token === tokenSalvo);
-      if (tokenObj && new Date(tokenObj.expira_em) > new Date()) {
-        document.getElementById("login").style.display = "none";
-        document.body.style.display = "block";
-      } else {
-        localStorage.removeItem("token_ativo");
-        document.getElementById("login").style.display = "block";
-      }
-    } catch (e) {
-      console.error("Erro ao verificar token salvo:", e);
-    }
-  });
-</script>
-
+    janela.document.write(`<html><head><title>Bilhetes - L.A Cashback VIP 👑</title></head><body>
 
 <div id="bilhete" class="bilhete-lateral">
   <h3>🎯 Desdobramento</h3>
