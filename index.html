@@ -871,7 +871,7 @@ async function carregarJogosAoVivo() {
     };
 
     const inputs = document.getElementById("inputs");
-    inputs.innerHTML = ""; // limpa jogos anteriores
+    inputs.innerHTML = "";
     const existentes = new Set();
 
     try {
@@ -918,6 +918,40 @@ async function carregarJogosAoVivo() {
 
             const mercadoPrincipal = bets.find(bet => bet.name === "Match Winner");
             const outrosMercados = bets.filter(bet => bet.name !== "Match Winner");
+
+            let alertas = [];
+            for (const bet of outrosMercados.concat(mercadoPrincipal || [])) {
+                const nomeMercado = bet.name.toLowerCase();
+                for (const odd of bet.values) {
+                    const oddValor = parseFloat(odd.odd);
+                    const oddDescricao = traduzirValorOdd(odd.value);
+
+                    if (nomeMercado.includes("goals over/under") && odd.value === "Over 1.5") {
+                        alertas.push(`⚽ Acima de 1.5 gols disponível (Odd ${oddValor.toFixed(2)})`);
+                    }
+                    if (nomeMercado.includes("corners") && odd.value.includes("Over 5.5")) {
+                        alertas.push(`🚩 Escanteios Over 5.5`);
+                    }
+                    if (bet.name === "Match Winner") {
+                        if (odd.value === "Home" && oddValor < 1.80) {
+                            alertas.push(`🔥 Casa pressionando (Odd ${oddValor.toFixed(2)})`);
+                        }
+                        if (odd.value === "Away" && oddValor < 1.80) {
+                            alertas.push(`🔥 Visitante pressionando (Odd ${oddValor.toFixed(2)})`);
+                        }
+                        if (oddValor >= 2.00 && ["Home", "Away"].includes(odd.value)) {
+                            alertas.push(`🎯 Odd interessante para ${traduzirValorOdd(odd.value)} (Odd ${oddValor.toFixed(2)})`);
+                        }
+                    }
+                }
+            }
+
+            let alertaTips = '';
+            if (alertas.length) {
+                alertaTips = `<div style="color:yellow;font-weight:bold;margin:10px 0;background:#333;padding:6px 10px;border-radius:8px;box-shadow:0 0 10px rgba(255,255,0,0.5);">
+                ⚠️ Alertas:<br>${alertas.join('<br>')}
+                </div>`;
+            }
 
             let mercadoPrincipalHTML = '';
             if (mercadoPrincipal) {
@@ -975,6 +1009,7 @@ async function carregarJogosAoVivo() {
                         <strong style="color:${corAway}">${awayTeam}</strong>
                         <img src="${logoAway}" alt="${awayTeam}">
                     </div>
+                    ${alertaTips}
                     <div class="mercado-principal"><strong>Resultado Final</strong>${mercadoPrincipalHTML}</div>
                     <button class="btn-mais-odds" type="button" onclick="document.getElementById('${collapseId}').classList.toggle('show')">Ver Mais Odds</button>
                     <div class="collapse mais-odds" id="${collapseId}" style="display:none;">
