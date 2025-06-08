@@ -383,6 +383,7 @@ input[type="checkbox"]:checked + label {
 
 <button onclick="carregarOddsReais()">🔄 Carregar Jogos do Dia</button>
 <button onclick="verificarOddsPassadas()">✅ Verificar se as Odds Bateram</button>
+   <button onclick="verificarGreens()">🟢 Verificar se Deu Green</button>
     <button onclick="gerarTipsIA()">🎯 Gerar Tips IA</button>
 <button onclick="carregarJogosAoVivo(); iniciarAutoAtualizacaoAoVivo();">📺 Jogos Ao Vivo</button>
 
@@ -1100,7 +1101,77 @@ async function verificarOddsPassadas() {
     alert(resultados.join("\n"));
 }
 
+async function verificarGreensAvancado() {
+    const checks = document.querySelectorAll('.jogoCheck:checked');
+    if (checks.length === 0) {
+        alert("Selecione ao menos uma odd para verificar.");
+        return;
+    }
 
+    const headers = {
+        "x-apisports-key": API_KEY,
+        "Accept": "application/json"
+    };
+
+    let mensagens = [];
+
+    for (const cb of checks) {
+        const nomeCompleto = cb.dataset.nome; // Ex: "Ambos Marcam: Sim"
+        const nomePartida = cb.dataset.jogo;
+        const card = cb.closest('.jogo-card');
+        const fixtureId = card.dataset.id;
+
+        try {
+            const url = `https://v3.football.api-sports.io/fixtures?id=${fixtureId}`;
+            const resp = await fetch(url, { headers });
+            const json = await resp.json();
+            const fixture = json.response[0];
+
+            if (!fixture || fixture.fixture.status.short !== 'FT') {
+                mensagens.push(`⏳ ${nomePartida} ainda não terminou.`);
+                continue;
+            }
+
+            const golsHome = fixture.goals.home;
+            const golsAway = fixture.goals.away;
+            const totalGols = golsHome + golsAway;
+
+            let deuGreen = false;
+            const [mercado, selecao] = nomeCompleto.split(":").map(s => s.trim());
+
+            // Lógica por mercado
+            if (mercado === "Ambos Marcam") {
+                deuGreen = (golsHome > 0 && golsAway > 0 && selecao === "Sim") ||
+                           ((golsHome === 0 || golsAway === 0) && selecao === "Não");
+            }
+            else if (mercado.includes("Gols Acima/Abaixo") || mercado.includes("Total")) {
+                const numero = parseFloat(selecao.split(" ")[1]); // Pega o 2.5 de "Acima 2.5"
+                if (selecao.startsWith("Acima")) deuGreen = totalGols > numero;
+                else if (selecao.startsWith("Abaixo")) deuGreen = totalGols < numero;
+            }
+            else if (mercado === "Resultado Final" || mercado === "Casa" || mercado === "Fora" || mercado === "Empate") {
+                if (golsHome > golsAway) deuGreen = selecao === "Casa";
+                else if (golsHome < golsAway) deuGreen = selecao === "Fora";
+                else deuGreen = selecao === "Empate";
+            }
+            else {
+                mensagens.push(`❔ ${nomePartida} | Mercado não suportado ainda: "${mercado}"`);
+                continue;
+            }
+
+            if (deuGreen) {
+                mensagens.push(`✅ ${nomePartida} | ${nomeCompleto} deu GREEN!`);
+            } else {
+                mensagens.push(`❌ ${nomePartida} | ${nomeCompleto} deu RED.`);
+            }
+
+        } catch (e) {
+            mensagens.push(`⚠️ Erro ao verificar ${nomePartida}`);
+        }
+    }
+
+    alert(mensagens.join("\n"));
+}
 
 </script>
 </body>
