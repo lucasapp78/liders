@@ -1054,7 +1054,7 @@ async function verificarOddsPassadas() {
         return;
     }
 
-    const url = `https://v3.football.api-sports.io/fixtures?league=${ligaID}&season=2024&date=${dataInput}`;
+    const url = `https://v3.football.api-sports.io/fixtures?league=${ligaID}&season=2025&date=${dataInput}`;
     const response = await fetch(url, { headers });
     const data = await response.json();
     const jogos = data.response;
