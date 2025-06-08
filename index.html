@@ -382,7 +382,7 @@ input[type="checkbox"]:checked + label {
 
 
 <button onclick="carregarOddsReais()">🔄 Carregar Jogos do Dia</button>
-<button onclick="gerarTipsIA()">🎯 Gerar Tips IA</button>
+<button onclick="gerarTipsIAHistorico()">🧠 Gerar Tips IA com Estatísticas Históricas</button>
 <button onclick="carregarJogosAoVivo(); iniciarAutoAtualizacaoAoVivo();">📺 Jogos Ao Vivo</button>
 
 <label>Tipo de aposta (acertos):</label>
@@ -1041,53 +1041,67 @@ function gerarTipsIA() {
     }
 }
 
-    async function gerarTipIA_EstatisticasHistoricas(fixture) {
-    const { id: fixtureId } = fixture.fixture;
-    const homeTeam = fixture.teams.home;
-    const awayTeam = fixture.teams.away;
-    const leagueId = fixture.league.id;
-    const season = fixture.league.season;
+    async function gerarTipsIAHistorico() {
+    const jogos = document.querySelectorAll('.jogo-card');
+    let selecoes = 0;
 
     const headers = {
         "x-apisports-key": API_KEY,
         "Accept": "application/json"
     };
 
-    try {
-        const urlCasa = `https://v3.football.api-sports.io/teams/statistics?league=${leagueId}&season=${season}&team=${homeTeam.id}`;
-        const urlFora = `https://v3.football.api-sports.io/teams/statistics?league=${leagueId}&season=${season}&team=${awayTeam.id}`;
+    for (const jogo of jogos) {
+        const fixtureId = jogo.dataset.id;
+        const fixture = window.todasFixtures?.find(f => String(f.fixture.id) === fixtureId);
+        if (!fixture) continue;
 
-        const [resCasa, resFora] = await Promise.all([
-            fetch(urlCasa, { headers }),
-            fetch(urlFora, { headers })
-        ]);
+        const homeTeam = fixture.teams.home;
+        const awayTeam = fixture.teams.away;
+        const leagueId = fixture.league.id;
+        const season = fixture.league.season;
 
-        const statsCasa = await resCasa.json();
-        const statsFora = await resFora.json();
+        try {
+            const [resCasa, resFora] = await Promise.all([
+                fetch(`https://v3.football.api-sports.io/teams/statistics?league=${leagueId}&season=${season}&team=${homeTeam.id}`, { headers }),
+                fetch(`https://v3.football.api-sports.io/teams/statistics?league=${leagueId}&season=${season}&team=${awayTeam.id}`, { headers })
+            ]);
 
-        const vitoriasCasa = statsCasa.response.fixtures.wins.home;
-        const jogosCasa = statsCasa.response.fixtures.played.home;
-        const mediaGolsCasa = statsCasa.response.goals.for.average.home;
+            const statsCasa = await resCasa.json();
+            const statsFora = await resFora.json();
 
-        const vitoriasFora = statsFora.response.fixtures.wins.away;
-        const jogosFora = statsFora.response.fixtures.played.away;
+            const vitoriasCasa = statsCasa.response.fixtures.wins.home;
+            const jogosCasa = statsCasa.response.fixtures.played.home || 1;
+            const mediaGolsCasa = parseFloat(statsCasa.response.goals.for.average.home || "0");
 
-        const aproveitamentoCasa = (vitoriasCasa / jogosCasa) * 100;
-        const aproveitamentoFora = (vitoriasFora / jogosFora) * 100;
+            const vitoriasFora = statsFora.response.fixtures.wins.away;
+            const jogosFora = statsFora.response.fixtures.played.away || 1;
 
-        console.log(`[IA] ${homeTeam.name}: ${aproveitamentoCasa.toFixed(1)}% de vitórias em casa, ${mediaGolsCasa} gols/jogo`);
-        console.log(`[IA] ${awayTeam.name}: ${aproveitamentoFora.toFixed(1)}% de vitórias fora`);
+            const aproveitamentoCasa = (vitoriasCasa / jogosCasa) * 100;
+            const aproveitamentoFora = (vitoriasFora / jogosFora) * 100;
 
-        // Critérios para palpite IA
-        if (aproveitamentoCasa >= 60 && mediaGolsCasa >= 1.5 && aproveitamentoFora < 40) {
-            alert(`✅ IA recomenda: Vitória do ${homeTeam.name} com base em estatísticas históricas.`);
-        } else {
-            alert("⚠️ Nenhum palpite IA forte encontrado com os dados históricos.");
+            // Critério: time da casa tem boa performance, visitante fraca
+            if (aproveitamentoCasa >= 60 && mediaGolsCasa >= 1.5 && aproveitamentoFora < 40) {
+                const checkboxes = jogo.querySelectorAll('.jogoCheck');
+                for (let cb of checkboxes) {
+                    const nome = cb.dataset.nome.toLowerCase();
+                    const odd = parseFloat(cb.dataset.odd);
+                    if (nome === 'casa' && odd >= 1.80 && odd <= 2.50) {
+                        cb.checked = true;
+                        selecoes++;
+                        break;
+                    }
+                }
+            }
+        } catch (erro) {
+            console.warn(`Erro ao obter estatísticas do jogo ${fixtureId}:`, erro);
         }
+    }
 
-    } catch (erro) {
-        console.error("Erro ao buscar estatísticas históricas:", erro);
-        alert("Erro ao gerar tip IA com base nas estatísticas históricas.");
+    if (selecoes > 0) {
+        atualizarBilhete();
+        alert(`✅ ${selecoes} tips IA geradas com base em estatísticas históricas.`);
+    } else {
+        alert("⚠️ Nenhuma tip encontrada com base nas estatísticas dos jogos carregados.");
     }
 }
 
