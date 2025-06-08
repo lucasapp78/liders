@@ -1007,37 +1007,39 @@ function gerarTipsIA() {
 
     jogos.forEach(jogo => {
         const checkboxes = jogo.querySelectorAll('.jogoCheck');
-        let melhores = [];
+        let opcoesValidas = [];
 
-        // Selecionar odds entre 1.80 e 2.50 como sugestão ideal
         checkboxes.forEach(cb => {
             const odd = parseFloat(cb.dataset.odd);
-            if (odd >= 1.8 && odd <= 2.5) {
-                melhores.push(cb);
+            const nome = cb.dataset.nome.toLowerCase();
+
+            // Regras de seleção
+            if (odd < 1.40 || odd > 3.00) return; // Elimina odds muito baixas ou muito altas
+
+            // Preferência por "Casa" com odd < 2.0
+            if (nome === 'casa' && odd < 2.0) {
+                opcoesValidas.unshift(cb); // Prioridade máxima
+            } else if (odd >= 1.80 && odd <= 2.50) {
+                opcoesValidas.push(cb); // Boa faixa
             }
         });
 
-        // Se não tiver nenhuma dentro do intervalo, pega qualquer uma
-        if (melhores.length === 0 && checkboxes.length > 0) {
-            melhores = Array.from(checkboxes);
-        }
-
-        // Selecionar uma aleatória entre as melhores
-        if (melhores.length > 0) {
-            const escolha = melhores[Math.floor(Math.random() * melhores.length)];
+        // Se houver opções válidas, escolher uma
+        if (opcoesValidas.length > 0) {
+            const escolha = opcoesValidas[0]; // Melhor opção
             escolha.checked = true;
             selecoes++;
         }
     });
 
     if (selecoes === 0) {
-        alert("Nenhuma odd foi encontrada para gerar dicas.");
+        alert("Nenhuma tip adequada foi encontrada com os critérios definidos.");
     } else {
-        atualizarBilhete();
-        alert(`🎯 Foram geradas ${selecoes} tips com IA baseada nas odds carregadas.`);
+        atualizarBilhete(); // Atualiza painel lateral
+        alert(`🎯 ${selecoes} tips foram geradas com base nas odds carregadas.`);
     }
 }
-    
+
     
 </script>
 </body>
