@@ -382,7 +382,8 @@ input[type="checkbox"]:checked + label {
 
 
 <button onclick="carregarOddsReais()">🔄 Carregar Jogos do Dia</button>
-<button onclick="gerarTipsIA()">🎯 Gerar Tips IA</button>
+<button onclick="verificarOddsPassadas()">✅ Verificar se as Odds Bateram</button>
+    <button onclick="gerarTipsIA()">🎯 Gerar Tips IA</button>
 <button onclick="carregarJogosAoVivo(); iniciarAutoAtualizacaoAoVivo();">📺 Jogos Ao Vivo</button>
 
 <label>Tipo de aposta (acertos):</label>
@@ -1039,6 +1040,68 @@ function gerarTipsIA() {
         alert(`🎯 ${selecoes} tips foram geradas com base nas odds carregadas.`);
     }
 }    
+
+async function verificarOddsPassadas() {
+    const ligaID = document.getElementById("liga").value;
+    const dataInput = document.getElementById("dataFiltro").value;
+    const headers = {
+        "x-apisports-key": API_KEY,
+        "Accept": "application/json"
+    };
+
+    if (!dataInput) {
+        alert("Selecione uma data anterior.");
+        return;
+    }
+
+    const url = `https://v3.football.api-sports.io/fixtures?league=${ligaID}&season=2024&date=${dataInput}`;
+    const response = await fetch(url, { headers });
+    const data = await response.json();
+    const jogos = data.response;
+
+    if (!jogos.length) {
+        alert("Nenhum jogo encontrado na data selecionada.");
+        return;
+    }
+
+    let resultados = [];
+
+    for (const fixture of jogos) {
+        const fixtureId = fixture.fixture.id;
+        const home = fixture.teams.home.name;
+        const away = fixture.teams.away.name;
+        const golsHome = fixture.goals.home;
+        const golsAway = fixture.goals.away;
+
+        let resultado;
+        if (golsHome > golsAway) resultado = "Casa";
+        else if (golsHome < golsAway) resultado = "Fora";
+        else resultado = "Empate";
+
+        const oddsResp = await fetch(`https://v3.football.api-sports.io/odds?fixture=${fixtureId}`, { headers });
+        const oddsJson = await oddsResp.json();
+        const oddsData = oddsJson.response[0];
+        if (!oddsData || !oddsData.bookmakers?.length) continue;
+
+        const betano = oddsData.bookmakers.find(b => b.name.toLowerCase().includes("betano"));
+        if (!betano) continue;
+
+        const mercadoPrincipal = betano.bets.find(bet => bet.name === "Match Winner");
+        if (!mercadoPrincipal) continue;
+
+        const apostaVencedora = mercadoPrincipal.values.find(v => {
+            let tipo = v.value === "Home" ? "Casa" : v.value === "Away" ? "Fora" : "Empate";
+            return tipo === resultado;
+        });
+
+        resultados.push(`📌 ${home} x ${away} | ✅ Resultado: ${resultado} | 💸 Odd vencedora: ${apostaVencedora?.odd || "Não disponível"}`);
+    }
+
+    alert(resultados.join("\n"));
+}
+
+
+
 </script>
 </body>
 </html>
