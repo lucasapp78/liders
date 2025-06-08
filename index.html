@@ -315,7 +315,7 @@ input[type="checkbox"]:checked + label {
   <input type="number" id="valor-aposta" placeholder="10.00" step="0.01" oninput="atualizarRetorno()">
   <div id="resultado-desdobramento"></div>
   <button onclick="limparSelecoes()">🧹 Limpar</button>
-  <button onclick="exportarPDF()">📄 PDF</button>
+ <button onclick="exportarPDF()">📄 PDF</button>
   <button onclick="compartilharWhatsApp()">📤 WhatsApp</button>
 </div>
 <button id="botao-bilhete" onclick="toggleBilhete()">🎯</button>
@@ -382,6 +382,7 @@ input[type="checkbox"]:checked + label {
 
 
 <button onclick="carregarOddsReais()">🔄 Carregar Jogos do Dia</button>
+<button onclick="gerarTipsIA()">🎯 Gerar Tips IA</button>
 <button onclick="carregarJogosAoVivo(); iniciarAutoAtualizacaoAoVivo();">📺 Jogos Ao Vivo</button>
 
 <label>Tipo de aposta (acertos):</label>
@@ -1000,6 +1001,44 @@ function iniciarAutoAtualizacaoAoVivo() {
     }, 30000);
 }
 
+function gerarTipsIA() {
+    const jogos = document.querySelectorAll('.jogo-card');
+    let selecoes = 0;
+
+    jogos.forEach(jogo => {
+        const checkboxes = jogo.querySelectorAll('.jogoCheck');
+        let melhores = [];
+
+        // Selecionar odds entre 1.80 e 2.50 como sugestão ideal
+        checkboxes.forEach(cb => {
+            const odd = parseFloat(cb.dataset.odd);
+            if (odd >= 1.8 && odd <= 2.5) {
+                melhores.push(cb);
+            }
+        });
+
+        // Se não tiver nenhuma dentro do intervalo, pega qualquer uma
+        if (melhores.length === 0 && checkboxes.length > 0) {
+            melhores = Array.from(checkboxes);
+        }
+
+        // Selecionar uma aleatória entre as melhores
+        if (melhores.length > 0) {
+            const escolha = melhores[Math.floor(Math.random() * melhores.length)];
+            escolha.checked = true;
+            selecoes++;
+        }
+    });
+
+    if (selecoes === 0) {
+        alert("Nenhuma odd foi encontrada para gerar dicas.");
+    } else {
+        atualizarBilhete();
+        alert(`🎯 Foram geradas ${selecoes} tips com IA baseada nas odds carregadas.`);
+    }
+}
+    
+    
 </script>
 </body>
 </html>
