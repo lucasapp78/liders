@@ -383,7 +383,7 @@ input[type="checkbox"]:checked + label {
 
 <button onclick="carregarOddsReais()">🔄 Carregar Jogos do Dia</button>
 <button onclick="verificarOddsPassadas()">✅ Verificar se as Odds Bateram</button>
-   <button onclick="verificarGreensAvancado()">🟢 Verificar Greens</button>
+   <button onclick="verificarGreensAvancado()">🟢 Verificar se deu Green</button>
  <button onclick="gerarTipsIA()">🎯 Gerar Tips IA</button>
 <button onclick="carregarJogosAoVivo(); iniciarAutoAtualizacaoAoVivo();">📺 Jogos Ao Vivo</button>
 
@@ -1116,7 +1116,7 @@ async function verificarGreensAvancado() {
     let mensagens = [];
 
     for (const cb of checks) {
-        const nomeCompleto = cb.dataset.nome; // Ex: "Ambos Marcam: Sim"
+        const nomeCompleto = cb.dataset.nome; // Ex: "Dupla Possibilidade: Casa ou Empate"
         const nomePartida = cb.dataset.jogo;
         const card = cb.closest('.jogo-card');
         const fixtureId = card.dataset.id;
@@ -1136,24 +1136,48 @@ async function verificarGreensAvancado() {
             const golsAway = fixture.goals.away;
             const totalGols = golsHome + golsAway;
 
-            let deuGreen = false;
-            const [mercado, selecao] = nomeCompleto.split(":").map(s => s.trim());
+            const [mercado, selecao] = nomeCompleto.split(":").map(x => x.trim());
 
-            // Lógica por mercado
-            if (mercado === "Ambos Marcam") {
-                deuGreen = (golsHome > 0 && golsAway > 0 && selecao === "Sim") ||
-                           ((golsHome === 0 || golsAway === 0) && selecao === "Não");
-            }
-            else if (mercado.includes("Gols Acima/Abaixo") || mercado.includes("Total")) {
-                const numero = parseFloat(selecao.split(" ")[1]); // Pega o 2.5 de "Acima 2.5"
-                if (selecao.startsWith("Acima")) deuGreen = totalGols > numero;
-                else if (selecao.startsWith("Abaixo")) deuGreen = totalGols < numero;
-            }
-            else if (mercado === "Resultado Final" || mercado === "Casa" || mercado === "Fora" || mercado === "Empate") {
+            let deuGreen = false;
+
+            // === LÓGICAS DE VERIFICAÇÃO POR MERCADO ===
+
+            if (mercado === "Resultado Final") {
                 if (golsHome > golsAway) deuGreen = selecao === "Casa";
                 else if (golsHome < golsAway) deuGreen = selecao === "Fora";
                 else deuGreen = selecao === "Empate";
             }
+
+            else if (mercado === "Ambos Marcam") {
+                const ambos = golsHome > 0 && golsAway > 0;
+                deuGreen = (selecao === "Sim" && ambos) || (selecao === "Não" && !ambos);
+            }
+
+            else if (mercado.includes("Gols Acima/Abaixo")) {
+                const valor = parseFloat(selecao.split(" ")[1]);
+                if (selecao.startsWith("Acima")) deuGreen = totalGols > valor;
+                else if (selecao.startsWith("Abaixo")) deuGreen = totalGols < valor;
+            }
+
+            else if (mercado === "Dupla Possibilidade") {
+                const resultadoFinal = golsHome > golsAway ? "Casa" : golsHome < golsAway ? "Fora" : "Empate";
+                const opcoes = selecao.split(" ou ").map(x => x.trim());
+                deuGreen = opcoes.includes(resultadoFinal);
+            }
+
+            else if (mercado === "Vencedor do Segundo Tempo") {
+                const gols2T = fixture.score.halftime; // Ex: { home: 1, away: 0 }
+                const golsFinais = { home: golsHome, away: golsAway };
+                const golsSegundo = {
+                    home: golsFinais.home - gols2T.home,
+                    away: golsFinais.away - gols2T.away
+                };
+
+                if (golsSegundo.home > golsSegundo.away) deuGreen = selecao === "Casa";
+                else if (golsSegundo.home < golsSegundo.away) deuGreen = selecao === "Fora";
+                else deuGreen = selecao === "Empate";
+            }
+
             else {
                 mensagens.push(`❔ ${nomePartida} | Mercado não suportado ainda: "${mercado}"`);
                 continue;
