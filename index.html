@@ -558,7 +558,7 @@ const bets = betano.bets;
                                             nomeTraduzido === 'Fora' ? awayTeam :
                                             `${homeTeam} x ${awayTeam}`;
                     mercadoPrincipalHTML += `<label>
-                    <input type="checkbox" class="jogoCheck" data-nome="${nomeTraduzido}" data-odd="${parseFloat(odd.odd).toFixed(2)}" data-jogo="${timeRelacionado}" />
+                    <input type="checkbox" class="jogoCheck" data-nome="Resultado Final: ${nomeTraduzido}" data-odd="${parseFloat(odd.odd).toFixed(2)}" data-jogo="${timeRelacionado}" />
                     ${nomeTraduzido} - ${parseFloat(odd.odd).toFixed(2)}
                     </label>`;
                 });
@@ -929,7 +929,7 @@ async function carregarJogosAoVivo() {
                                             nomeTraduzido === 'Fora' ? awayTeam :
                                             `${homeTeam} x ${awayTeam}`;
                     mercadoPrincipalHTML += `<label>
-                        <input type="checkbox" class="jogoCheck" data-nome="${nomeTraduzido}" data-odd="${parseFloat(odd.odd).toFixed(2)}" data-jogo="${timeRelacionado}" />
+                       <input type="checkbox" class="jogoCheck" data-nome="Resultado Final: ${nomeTraduzido}" data-odd="${parseFloat(odd.odd).toFixed(2)}" data-jogo="${timeRelacionado}" />
                         ${nomeTraduzido} - ${parseFloat(odd.odd).toFixed(2)}
                     </label>`;
                 });
