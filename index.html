@@ -871,7 +871,7 @@ async function carregarJogosAoVivo() {
     };
 
     const inputs = document.getElementById("inputs");
-    inputs.innerHTML = "";
+    inputs.innerHTML = ""; // limpa jogos anteriores
     const existentes = new Set();
 
     try {
@@ -918,85 +918,6 @@ async function carregarJogosAoVivo() {
 
             const mercadoPrincipal = bets.find(bet => bet.name === "Match Winner");
             const outrosMercados = bets.filter(bet => bet.name !== "Match Winner");
-
-            // Estatísticas adicionais
-            let posseCasa = 0, posseFora = 0, chutesCasa = 0, chutesFora = 0, escanteiosCasa = 0, escanteiosFora = 0;
-            try {
-                const statsResp = await fetch(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${fixtureId}`, { headers });
-                const statsJson = await statsResp.json();
-                const estatisticas = statsJson.response;
-
-                estatisticas.forEach(teamStat => {
-                    const timeNome = teamStat.team.name;
-                    teamStat.statistics.forEach(stat => {
-                        if (stat.type === "Ball Possession") {
-                            const valor = parseInt(stat.value);
-                            if (timeNome === homeTeam) posseCasa = valor;
-                            if (timeNome === awayTeam) posseFora = valor;
-                        }
-                        if (stat.type === "Total Shots") {
-                            const valor = parseInt(stat.value);
-                            if (timeNome === homeTeam) chutesCasa = valor;
-                            if (timeNome === awayTeam) chutesFora = valor;
-                        }
-                        if (stat.type === "Corner Kicks") {
-                            const valor = parseInt(stat.value);
-                            if (timeNome === homeTeam) escanteiosCasa = valor;
-                            if (timeNome === awayTeam) escanteiosFora = valor;
-                        }
-                    });
-                });
-            } catch (e) {
-                console.warn("Estatísticas não disponíveis para o jogo:", fixtureId);
-            }
-
-            let alertas = [];
-            for (const bet of outrosMercados.concat(mercadoPrincipal || [])) {
-                const nomeMercado = bet.name.toLowerCase();
-                for (const odd of bet.values) {
-                    const oddValor = parseFloat(odd.odd);
-                    const oddDescricao = traduzirValorOdd(odd.value);
-
-                    if (nomeMercado.includes("goals over/under") && odd.value === "Over 1.5") {
-                        alertas.push(`⚽ Acima de 1.5 gols disponível (Odd ${oddValor.toFixed(2)})`);
-                    }
-                    if (nomeMercado.includes("corners") && odd.value.includes("Over 5.5")) {
-                        alertas.push(`🚩 Escanteios Over 5.5`);
-                    }
-                    if (bet.name === "Match Winner") {
-                        if (odd.value === "Home" && oddValor < 1.80) {
-                            alertas.push(`🔥 Casa favorita (Odd ${oddValor.toFixed(2)})`);
-                        }
-                        if (odd.value === "Away" && oddValor < 1.80) {
-                            alertas.push(`🔥 Visitante favorito (Odd ${oddValor.toFixed(2)})`);
-                        }
-                        if (oddValor >= 2.00 && ["Home", "Away"].includes(odd.value)) {
-                            alertas.push(`🎯 Odd interessante para ${traduzirValorOdd(odd.value)} (Odd ${oddValor.toFixed(2)})`);
-                        }
-                    }
-                }
-            }
-
-            // Alertas baseados em estatísticas
-            if (posseCasa >= 60 && chutesCasa >= 5) {
-                alertas.push(`📊 Casa pressionando (${posseCasa}% posse, ${chutesCasa} chutes)`);
-            }
-            if (escanteiosCasa >= 5 && tempo < 45) {
-                alertas.push(`🚩 Casa tem ${escanteiosCasa} escanteios no 1º tempo`);
-            }
-            if (posseFora >= 60 && chutesFora >= 5) {
-                alertas.push(`📊 Visitante pressionando (${posseFora}% posse, ${chutesFora} chutes)`);
-            }
-            if (escanteiosFora >= 5 && tempo < 45) {
-                alertas.push(`🚩 Visitante tem ${escanteiosFora} escanteios no 1º tempo`);
-            }
-
-            let alertaTips = '';
-            if (alertas.length) {
-                alertaTips = `<div style="color:yellow;font-weight:bold;margin:10px 0;background:#333;padding:6px 10px;border-radius:8px;box-shadow:0 0 10px rgba(255,255,0,0.5);">
-                ⚠️ Alertas:<br>${alertas.join('<br>')}
-                </div>`;
-            }
 
             let mercadoPrincipalHTML = '';
             if (mercadoPrincipal) {
@@ -1054,7 +975,6 @@ async function carregarJogosAoVivo() {
                         <strong style="color:${corAway}">${awayTeam}</strong>
                         <img src="${logoAway}" alt="${awayTeam}">
                     </div>
-                    ${alertaTips}
                     <div class="mercado-principal"><strong>Resultado Final</strong>${mercadoPrincipalHTML}</div>
                     <button class="btn-mais-odds" type="button" onclick="document.getElementById('${collapseId}').classList.toggle('show')">Ver Mais Odds</button>
                     <div class="collapse mais-odds" id="${collapseId}" style="display:none;">
