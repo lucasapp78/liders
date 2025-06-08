@@ -1041,62 +1041,53 @@ function gerarTipsIA() {
     }
 }
 
-    async function gerarTipIAComEstatisticas() {
-    const jogo = document.querySelector('.jogo-card'); // Primeiro jogo exibido
-    if (!jogo) {
-        alert("Nenhum jogo carregado.");
-        return;
-    }
+    async function gerarTipIA_EstatisticasHistoricas(fixture) {
+    const { id: fixtureId } = fixture.fixture;
+    const homeTeam = fixture.teams.home;
+    const awayTeam = fixture.teams.away;
+    const leagueId = fixture.league.id;
+    const season = fixture.league.season;
 
-    const fixtureId = jogo.dataset.id;
-    const checkboxes = jogo.querySelectorAll('.jogoCheck');
+    const headers = {
+        "x-apisports-key": API_KEY,
+        "Accept": "application/json"
+    };
 
     try {
-        const headers = {
-            "x-apisports-key": API_KEY,
-            "Accept": "application/json"
-        };
+        const urlCasa = `https://v3.football.api-sports.io/teams/statistics?league=${leagueId}&season=${season}&team=${homeTeam.id}`;
+        const urlFora = `https://v3.football.api-sports.io/teams/statistics?league=${leagueId}&season=${season}&team=${awayTeam.id}`;
 
-        // Buscar estatísticas do jogo
-        const resp = await fetch(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${fixtureId}`, { headers });
-        const statsData = await resp.json();
+        const [resCasa, resFora] = await Promise.all([
+            fetch(urlCasa, { headers }),
+            fetch(urlFora, { headers })
+        ]);
 
-        if (!statsData.response || statsData.response.length < 2) {
-            alert("Estatísticas não disponíveis.");
-            return;
+        const statsCasa = await resCasa.json();
+        const statsFora = await resFora.json();
+
+        const vitoriasCasa = statsCasa.response.fixtures.wins.home;
+        const jogosCasa = statsCasa.response.fixtures.played.home;
+        const mediaGolsCasa = statsCasa.response.goals.for.average.home;
+
+        const vitoriasFora = statsFora.response.fixtures.wins.away;
+        const jogosFora = statsFora.response.fixtures.played.away;
+
+        const aproveitamentoCasa = (vitoriasCasa / jogosCasa) * 100;
+        const aproveitamentoFora = (vitoriasFora / jogosFora) * 100;
+
+        console.log(`[IA] ${homeTeam.name}: ${aproveitamentoCasa.toFixed(1)}% de vitórias em casa, ${mediaGolsCasa} gols/jogo`);
+        console.log(`[IA] ${awayTeam.name}: ${aproveitamentoFora.toFixed(1)}% de vitórias fora`);
+
+        // Critérios para palpite IA
+        if (aproveitamentoCasa >= 60 && mediaGolsCasa >= 1.5 && aproveitamentoFora < 40) {
+            alert(`✅ IA recomenda: Vitória do ${homeTeam.name} com base em estatísticas históricas.`);
+        } else {
+            alert("⚠️ Nenhum palpite IA forte encontrado com os dados históricos.");
         }
 
-        const homeStats = statsData.response.find(s => s.team?.id == statsData.response[0].team.id);
-        const awayStats = statsData.response.find(s => s.team?.id != homeStats.team.id);
-
-        const posseCasa = parseInt(homeStats.statistics.find(s => s.type === "Ball Possession")?.value || "0");
-        const chutesGolCasa = parseInt(homeStats.statistics.find(s => s.type === "Shots on Goal")?.value || "0");
-        const posseFora = parseInt(awayStats.statistics.find(s => s.type === "Ball Possession")?.value || "0");
-        const chutesGolFora = parseInt(awayStats.statistics.find(s => s.type === "Shots on Goal")?.value || "0");
-
-        const vantagemCasa = posseCasa > posseFora && chutesGolCasa >= chutesGolFora;
-
-        if (!vantagemCasa) {
-            alert("Estatísticas não apontam vantagem clara da casa.");
-            return;
-        }
-
-        // Buscar uma odd de "Casa" entre 1.80 e 2.50
-        for (let cb of checkboxes) {
-            const nome = cb.dataset.nome.toLowerCase();
-            const odd = parseFloat(cb.dataset.odd);
-            if (nome === 'casa' && odd >= 1.80 && odd <= 2.50) {
-                cb.checked = true;
-                atualizarBilhete();
-                alert(`🧠 Tip gerada com base nas estatísticas: Vitória da Casa (${odd.toFixed(2)})`);
-                return;
-            }
-        }
-
-        alert("Nenhuma odd ideal encontrada para 'Casa'.");
     } catch (erro) {
-        console.error("Erro:", erro);
-        alert("Erro ao buscar estatísticas da API.");
+        console.error("Erro ao buscar estatísticas históricas:", erro);
+        alert("Erro ao gerar tip IA com base nas estatísticas históricas.");
     }
 }
 
