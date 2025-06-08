@@ -1058,7 +1058,7 @@ async function verificarGreensAvancado() {
     let mensagens = [];
 
     for (const cb of checks) {
-        const nomeCompleto = cb.dataset.nome; // Ex: "Dupla Possibilidade: Casa ou Empate"
+        const nomeCompleto = cb.dataset.nome;
         const nomePartida = cb.dataset.jogo;
         const card = cb.closest('.jogo-card');
         const fixtureId = card.dataset.id;
@@ -1077,59 +1077,119 @@ async function verificarGreensAvancado() {
             const golsHome = fixture.goals.home;
             const golsAway = fixture.goals.away;
             const totalGols = golsHome + golsAway;
-
             const [mercado, selecao] = nomeCompleto.split(":").map(x => x.trim());
-
             let deuGreen = false;
 
-            // === LÓGICAS DE VERIFICAÇÃO POR MERCADO ===
+            switch (mercado) {
+                case "Resultado Final":
+                    if (golsHome > golsAway) deuGreen = selecao === "Casa";
+                    else if (golsHome < golsAway) deuGreen = selecao === "Fora";
+                    else deuGreen = selecao === "Empate";
+                    break;
 
-            if (mercado === "Resultado Final") {
-                if (golsHome > golsAway) deuGreen = selecao === "Casa";
-                else if (golsHome < golsAway) deuGreen = selecao === "Fora";
-                else deuGreen = selecao === "Empate";
+                case "Ambos Marcam":
+                case "Ambos Marcam - 1º Tempo":
+                case "Ambos Marcam - 2º Tempo":
+                    const ambos = golsHome > 0 && golsAway > 0;
+                    deuGreen = (selecao === "Sim" && ambos) || (selecao === "Não" && !ambos);
+                    break;
+
+                case "Gols Acima/Abaixo":
+                case "Gols Acima/Abaixo - 1º Tempo":
+                case "Gols Acima/Abaixo - 2º Tempo":
+                    const valorGA = parseFloat(selecao.split(" ")[1]);
+                    if (selecao.startsWith("Acima")) deuGreen = totalGols > valorGA;
+                    else if (selecao.startsWith("Abaixo")) deuGreen = totalGols < valorGA;
+                    break;
+
+                case "Dupla Possibilidade":
+                case "Dupla Possibilidade - 1º Tempo":
+                case "Dupla Possibilidade - 2º Tempo":
+                    const resultadoFinal = golsHome > golsAway ? "Casa" : golsHome < golsAway ? "Fora" : "Empate";
+                    const opcoes = selecao.split(" ou ").map(x => x.trim());
+                    deuGreen = opcoes.includes(resultadoFinal);
+                    break;
+
+                case "Vencedor do Segundo Tempo":
+                    const intervalo = fixture.score.halftime;
+                    const gols2T = {
+                        home: golsHome - intervalo.home,
+                        away: golsAway - intervalo.away
+                    };
+                    if (gols2T.home > gols2T.away) deuGreen = selecao === "Casa";
+                    else if (gols2T.home < gols2T.away) deuGreen = selecao === "Fora";
+                    else deuGreen = selecao === "Empate";
+                    break;
+
+                case "Vencedor do 1º Tempo":
+                    const gols1T = fixture.score.halftime;
+                    if (gols1T.home > gols1T.away) deuGreen = selecao === "Casa";
+                    else if (gols1T.home < gols1T.away) deuGreen = selecao === "Fora";
+                    else deuGreen = selecao === "Empate";
+                    break;
+
+                case "Ímpar/Par":
+                    deuGreen = (totalGols % 2 === 0 && selecao === "Par") || (totalGols % 2 !== 0 && selecao === "Ímpar");
+                    break;
+
+                case "Número Exato de Gols":
+                    deuGreen = totalGols === parseInt(selecao);
+                    break;
+
+                case "Total - Time da Casa":
+                case "Total de Gols - Time da Casa (1º Tempo)":
+                case "Total de Gols - Time da Casa (2º Tempo)":
+                    const valorCasa = parseFloat(selecao.split(" ")[1]);
+                    if (selecao.startsWith("Acima")) deuGreen = golsHome > valorCasa;
+                    else if (selecao.startsWith("Abaixo")) deuGreen = golsHome < valorCasa;
+                    break;
+
+                case "Total - Time Visitante":
+                case "Total de Gols - Time Visitante (1º Tempo)":
+                case "Total de Gols - Time Visitante (2º Tempo)":
+                    const valorFora = parseFloat(selecao.split(" ")[1]);
+                    if (selecao.startsWith("Acima")) deuGreen = golsAway > valorFora;
+                    else if (selecao.startsWith("Abaixo")) deuGreen = golsAway < valorFora;
+                    break;
+
+                // MERCADOS AINDA NÃO SUPORTADOS POR LIMITAÇÃO DA API
+                case "Placar Exato":
+                case "Placar Exato - 1º Tempo":
+                case "HT/FT Double":
+                case "Handicap Asiático":
+                case "Handicap Asiático - 1º Tempo":
+                case "Empate Anula Aposta (1º Tempo)":
+                case "Empate Anula Aposta (2º Tempo)":
+                case "Home win both halves":
+                case "Away win both halves":
+                case "To Win Either Half":
+                case "Home Team Exact Goals Number":
+                case "Away Team Exact Goals Number":
+                case "Results/Both Teams Score":
+                case "First 10 min Winner":
+                case "Tempo com Mais Gols":
+                case "Escanteios Acima/Abaixo":
+                case "Total de Escanteios (1º Tempo)":
+                case "Handicap Asiático de Cartões":
+                case "Total de Cartões - Time da Casa":
+                case "Total de Cartões - Time Visitante":
+                case "Cartões Acima/Abaixo":
+                case "Total de Finalizações no Gol":
+                case "Gol Contra":
+                case "Time da Casa Marcará em Ambos os Tempos":
+                case "Time Visitante Marcará em Ambos os Tempos":
+                case "Handicap Asiático de Escanteios":
+                case "Escanteios do Time da Casa Acima/Abaixo":
+                case "Escanteios do Time Visitante Acima/Abaixo":
+                    mensagens.push(`❔ ${nomePartida} | Mercado ainda não suportado: "${mercado}"`);
+                    continue;
+
+                default:
+                    mensagens.push(`❔ ${nomePartida} | Mercado desconhecido: "${mercado}"`);
+                    continue;
             }
 
-            else if (mercado === "Ambos Marcam") {
-                const ambos = golsHome > 0 && golsAway > 0;
-                deuGreen = (selecao === "Sim" && ambos) || (selecao === "Não" && !ambos);
-            }
-
-            else if (mercado.includes("Gols Acima/Abaixo")) {
-                const valor = parseFloat(selecao.split(" ")[1]);
-                if (selecao.startsWith("Acima")) deuGreen = totalGols > valor;
-                else if (selecao.startsWith("Abaixo")) deuGreen = totalGols < valor;
-            }
-
-            else if (mercado === "Dupla Possibilidade") {
-                const resultadoFinal = golsHome > golsAway ? "Casa" : golsHome < golsAway ? "Fora" : "Empate";
-                const opcoes = selecao.split(" ou ").map(x => x.trim());
-                deuGreen = opcoes.includes(resultadoFinal);
-            }
-
-            else if (mercado === "Vencedor do Segundo Tempo") {
-                const gols2T = fixture.score.halftime; // Ex: { home: 1, away: 0 }
-                const golsFinais = { home: golsHome, away: golsAway };
-                const golsSegundo = {
-                    home: golsFinais.home - gols2T.home,
-                    away: golsFinais.away - gols2T.away
-                };
-
-                if (golsSegundo.home > golsSegundo.away) deuGreen = selecao === "Casa";
-                else if (golsSegundo.home < golsSegundo.away) deuGreen = selecao === "Fora";
-                else deuGreen = selecao === "Empate";
-            }
-
-            else {
-                mensagens.push(`❔ ${nomePartida} | Mercado não suportado ainda: "${mercado}"`);
-                continue;
-            }
-
-            if (deuGreen) {
-                mensagens.push(`✅ ${nomePartida} | ${nomeCompleto} deu GREEN!`);
-            } else {
-                mensagens.push(`❌ ${nomePartida} | ${nomeCompleto} deu RED.`);
-            }
+            mensagens.push(`${deuGreen ? "✅" : "❌"} ${nomePartida} | ${nomeCompleto} deu ${deuGreen ? "GREEN" : "RED"}`);
 
         } catch (e) {
             mensagens.push(`⚠️ Erro ao verificar ${nomePartida}`);
