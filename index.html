@@ -1018,7 +1018,7 @@ function gerarTipsIA() {
             if (odd < 1.05 || odd > 1.06) return; // Elimina odds muito baixas ou muito altas
 
             // Preferência por "Casa" com odd < 2.0
-            if (nome === 'casa' && odd < 1.50.0) {
+            if (nome === 'casa' && odd < 1.50) {
                 opcoesValidas.unshift(cb); // Prioridade máxima
             } else if (odd >= 1.10 && odd <= 1.80) {
                 opcoesValidas.push(cb); // Boa faixa
