@@ -346,6 +346,7 @@ input[type="checkbox"]:checked + label {
 
 <label>Campeonato:</label>
 <select id="liga">
+  <option value="15">🌎 Copa Do Mundo De Clubes Da FIFA</option>
   <option value="71">🇧🇷 Brasileirão Série A</option>
   <option value="72">🇧🇷 Brasileirão Série B</option>
   <option value="75">🇧🇷 Brasileirão Série C</option>
@@ -403,6 +404,9 @@ input[type="checkbox"]:checked + label {
 
 <button onclick="gerarDesdobramento()">⚙️ Gerar Bilhetes</button>
 <button onclick="exportarPDF()">📄 Exportar PDF</button>
+<input type="text" id="codigo-bilhete" placeholder="Digite o código" style="margin-top:10px;">
+<button onclick="carregarBilhetePorCodigo()">🔍 Carregar Bilhete</button>
+<button onclick="salvarBilheteLocal()">💾 Salvar Bilhete</button>
 <button onclick="compartilharWhatsApp()">📤 Compartilhar no WhatsApp</button>
 
 <div id="resultado"></div>
@@ -1013,10 +1017,9 @@ function gerarTipsIA() {
             const odd = parseFloat(cb.dataset.odd);
             const nome = cb.dataset.nome.toLowerCase();
 
-            // Regras de seleção
-            if (odd < 1.05 || odd > 1.06) return; // Elimina odds muito baixas ou muito altas
+            
 
-            // Preferência por "Casa" com odd < 2.0
+            // Preferência por "Casa" com odd < 1.90
             if (nome === 'casa' && odd < 1.50) {
                 opcoesValidas.unshift(cb); // Prioridade máxima
             } else if (odd >= 1.10 && odd <= 1.80) {
@@ -1197,6 +1200,47 @@ async function verificarGreensAvancado() {
 
     alert(mensagens.join("\n"));
 }
+
+function gerarCodigoUnico() {
+    return 'LA' + Date.now().toString(36).toUpperCase().slice(-6);
+}
+
+function salvarBilheteLocal() {
+    const resultado = document.getElementById("resultado");
+    if (!resultado.innerHTML.trim()) {
+        alert("Gere os bilhetes antes de salvar.");
+        return;
+    }
+
+    const codigo = gerarCodigoUnico();
+    const bilhetesSalvos = JSON.parse(localStorage.getItem("bilhetes_LA") || "{}");
+
+    bilhetesSalvos[codigo] = resultado.innerHTML;
+    localStorage.setItem("bilhetes_LA", JSON.stringify(bilhetesSalvos));
+
+    alert("✅ Bilhete salvo com o código: " + codigo);
+}
+
+function carregarBilhetePorCodigo() {
+    const codigo = document.getElementById("codigo-bilhete").value.trim().toUpperCase();
+    if (!codigo) {
+        alert("Digite um código válido.");
+        return;
+    }
+
+    const bilhetesSalvos = JSON.parse(localStorage.getItem("bilhetes_LA") || "{}");
+
+    if (!bilhetesSalvos[codigo]) {
+        alert("❌ Código não encontrado.");
+        return;
+    }
+
+    document.getElementById("resultado").innerHTML = bilhetesSalvos[codigo];
+    alert("📄 Bilhete carregado com sucesso!");
+}
+
+
+
 
 </script>
 </body>
